@@ -19,7 +19,6 @@ def create_app(config=None):
     with app.app_context():
         db.create_all()
 
-
     @app.route("/clients", methods=["GET"])
     def get_clients():
         clients = db.session.execute(db.select(Client)).scalars().all()
@@ -54,9 +53,7 @@ def create_app(config=None):
         data = request.get_json(silent=True) or {}
         address, count_places = data.get("address"), data.get("count_places")
         if not address or not isinstance(count_places, int) or count_places <= 0:
-            return jsonify(
-                {"error": "Нужны address и положительное целое count_places"}
-            ), 400
+            return jsonify({"error": "Нужны address и положительное целое count_places"}), 400
 
         parking = Parking(
             address=address,
@@ -68,13 +65,10 @@ def create_app(config=None):
         db.session.commit()
         return jsonify(parking.to_json()), 201
 
-
     def _get_client_and_parking(data):
         client_id, parking_id = data.get("client_id"), data.get("parking_id")
         if client_id is None or parking_id is None:
-            return None, None, (
-                jsonify({"error": "Нужны client_id и parking_id"}), 400
-            )
+            return None, None, (jsonify({"error": "Нужны client_id и parking_id"}), 400)
         client = db.session.get(Client, client_id)
         parking = db.session.get(Parking, parking_id)
         if client is None:
@@ -85,9 +79,7 @@ def create_app(config=None):
 
     def _find_log(client_id, parking_id):
         return db.session.execute(
-            db.select(ClientParking).filter_by(
-                client_id=client_id, parking_id=parking_id
-            )
+            db.select(ClientParking).filter_by(client_id=client_id, parking_id=parking_id)
         ).scalar_one_or_none()
 
     @app.route("/client_parkings", methods=["POST"])
@@ -128,9 +120,7 @@ def create_app(config=None):
             return jsonify({"error": "Клиент не находится на этой парковке"}), 400
 
         if not client.credit_card:
-            return jsonify(
-                {"error": "У клиента не привязана карта, оплата невозможна"}
-            ), 400
+            return jsonify({"error": "У клиента не привязана карта, оплата невозможна"}), 400
 
         log.time_out = datetime.now()
         hours = (log.time_out - log.time_in).total_seconds() / 3600

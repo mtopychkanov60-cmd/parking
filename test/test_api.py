@@ -8,7 +8,6 @@ PARKING_ID = 1
 BODY = {"client_id": CLIENT_ID, "parking_id": PARKING_ID}
 
 
-
 def get_parking(db, parking_id=PARKING_ID):
     db.session.expire_all()
     return db.session.get(Parking, parking_id)
@@ -41,6 +40,7 @@ def add_parking(db, **kwargs):
     db.session.add(p)
     db.session.commit()
     return p
+
 
 def count_rows(db, model):
     db.session.expire_all()
@@ -93,6 +93,7 @@ def test_create_parking_with_factory(client, db):
     assert created.count_places == data.count_places
     assert created.count_available_places == data.count_places
 
+
 @pytest.mark.parametrize("url", ["/clients", f"/clients/{CLIENT_ID}"])
 def test_get_methods_return_200(client, url):
     response = client.get(url)
@@ -131,7 +132,6 @@ def test_create_client_without_required_fields(client):
     assert response.status_code == 400
 
 
-
 def test_create_parking(client, db):
     payload = {"address": "ул. Кирова, 10", "count_places": 20, "opened": True}
     response = client.post("/parkings", json=payload)
@@ -147,7 +147,6 @@ def test_create_parking(client, db):
 def test_create_parking_with_invalid_places(client):
     response = client.post("/parkings", json={"address": "ул. Кирова", "count_places": 0})
     assert response.status_code == 400
-
 
 
 @pytest.mark.parking
@@ -179,9 +178,7 @@ def test_enter_closed_parking(client, db):
 def test_enter_parking_without_free_places(client, db):
     full = add_parking(db, count_places=1, count_available_places=0)
 
-    response = client.post(
-        "/client_parkings", json={"client_id": CLIENT_ID, "parking_id": full.id}
-    )
+    response = client.post("/client_parkings", json={"client_id": CLIENT_ID, "parking_id": full.id})
 
     assert response.status_code == 400
     assert get_parking(db, full.id).count_available_places == 0
@@ -200,9 +197,18 @@ def test_enter_parking_twice(client, db):
 
 @pytest.mark.parking
 def test_enter_unknown_client_or_parking(client):
-    assert client.post("/client_parkings", json={"client_id": 999, "parking_id": PARKING_ID}).status_code == 404
-    assert client.post("/client_parkings", json={"client_id": CLIENT_ID, "parking_id": 999}).status_code == 404
-
+    assert (
+        client.post(
+            "/client_parkings", json={"client_id": 999, "parking_id": PARKING_ID}
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            "/client_parkings", json={"client_id": CLIENT_ID, "parking_id": 999}
+        ).status_code
+        == 404
+    )
 
 
 @pytest.mark.parking

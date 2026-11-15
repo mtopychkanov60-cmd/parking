@@ -1,0 +1,9 @@
+flask
+uvicorn[standard]
+pytest
+httpx
+black
+flake8
+flask_sqlalchemy
+factory_boy
+faker
